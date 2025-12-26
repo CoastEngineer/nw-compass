@@ -119,3 +119,10 @@ export function deleteSnapshot(id: string): Snapshot[] {
   saveSnapshots(next);
   return next;
 }
+
+export function renameSnapshot(id: string, name: string): Snapshot[] {
+  const cur = loadSnapshots();
+  const next = cur.map((s) => (s.id === id ? { ...s, name: name.trim() || s.name } : s));
+  saveSnapshots(next);
+  return next;
+}
