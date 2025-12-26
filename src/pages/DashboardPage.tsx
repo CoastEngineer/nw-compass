@@ -54,14 +54,14 @@ export default function DashboardPage() {
     const name = window.prompt("Snapshot name (optional):", "");
     const snap = createSnapshot(cfg, name ?? undefined);
     addSnapshot(snap);
-    // quick feedback (can replace with toast later)
     alert("Snapshot saved.");
   };
 
   return (
     <Page title="Dashboard" subtitle="A calm, precise cockpit for your family plan">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-2">
+      {/* ✅ header layout: no weird blank space */}
+      <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="flex flex-wrap gap-2">
           <SegmentedToggle
             value={display.currency}
             onChange={(v) => setDisplay({ currency: v as any })}
@@ -91,7 +91,7 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3 lg:justify-end">
           <div className="text-xs text-neutral-500">
             {first?.year} → {last?.year} (age {startAge} → {endAge})
           </div>
@@ -107,11 +107,7 @@ export default function DashboardPage() {
 
       {/* KPI strip */}
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPIStatCard
-          label="Current age (start)"
-          value={`${startAge}`}
-          sub={`Start year ${cfg.startYear}`}
-        />
+        <KPIStatCard label="Current age (start)" value={`${startAge}`} sub={`Start year ${cfg.startYear}`} />
 
         <KPIStatCard
           label="Start NW"
@@ -141,19 +137,13 @@ export default function DashboardPage() {
 
         <KPIStatCard
           label={isDeficit ? "Deficit (Y1)" : "Saving (Y1)"}
-          value={
-            display.currency === "USD"
-              ? formatCompactUsd(y1Diff / cfg.fxVndPerUsd)
-              : formatCompactVnd(y1Diff)
-          }
+          value={display.currency === "USD" ? formatCompactUsd(y1Diff / cfg.fxVndPerUsd) : formatCompactVnd(y1Diff)}
           sub={isDeficit ? "(Expense > Income)" : "(Income - Expense)"}
         />
 
         <KPIStatCard
           label="CAGR (Bear/Base/Bull)"
-          value={`${Math.round(cfg.cagr.bear * 100)} / ${Math.round(cfg.cagr.base * 100)} / ${Math.round(
-            cfg.cagr.bull * 100
-          )}%`}
+          value={`${Math.round(cfg.cagr.bear * 100)} / ${Math.round(cfg.cagr.base * 100)} / ${Math.round(cfg.cagr.bull * 100)}%`}
           sub="Assumption"
         />
 
@@ -179,7 +169,12 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-6">
-        <ProjectionTable rows={rows} currency={display.currency} tableStep={display.tableStep} fxVndPerUsd={cfg.fxVndPerUsd} />
+        <ProjectionTable
+          rows={rows}
+          currency={display.currency}
+          tableStep={display.tableStep}
+          fxVndPerUsd={cfg.fxVndPerUsd}
+        />
       </div>
     </Page>
   );

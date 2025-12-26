@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import ToastHost from "./ToastHost";
 
 export default function Page(props: { title: string; subtitle?: string; children: ReactNode }) {
   return (
@@ -9,7 +10,11 @@ export default function Page(props: { title: string; subtitle?: string; children
           {props.subtitle && <div className="mt-1 text-sm text-neutral-500">{props.subtitle}</div>}
         </div>
       </div>
+
       <div className="mt-6">{props.children}</div>
+
+      {/* Global toast */}
+      <ToastHost />
     </div>
   );
 }
