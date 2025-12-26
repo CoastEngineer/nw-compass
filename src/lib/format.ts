@@ -1,5 +1,12 @@
 export function formatCompactVnd(x: number) {
-  return new Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 2 }).format(x);
+  const abs = Math.abs(x);
+  const fmt = (v: number) =>
+    new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(v);
+
+  if (abs >= 1e12) return `${fmt(x / 1e12)} nghìn tỷ`;
+  if (abs >= 1e9) return `${fmt(x / 1e9)} tỷ`;
+  if (abs >= 1e6) return `${fmt(x / 1e6)} triệu`;
+  return new Intl.NumberFormat("vi-VN").format(x);
 }
 
 export function formatFullVnd(x: number) {
