@@ -22,8 +22,28 @@ function MiniKPI({ label, value }: { label: string; value: string }) {
   );
 }
 
-function parseYear(s: string) {
-  const m = String(s).match(/\b(19|20)\d{2}\b/);
+/** Milestone values can be string ("2030 (age 39)") OR object ({year, age}) */
+function milestoneToText(v: any): string {
+  if (v == null) return "—";
+  if (typeof v === "string") return v;
+
+  if (typeof v === "object") {
+    const year = (v as any).year;
+    const age = (v as any).age;
+    if (typeof year === "number" && typeof age === "number") return `${year} (age ${age})`;
+    if (typeof year === "number") return String(year);
+    return "—";
+  }
+
+  return String(v);
+}
+
+function milestoneToYear(v: any): number | null {
+  if (v == null) return null;
+  if (typeof v === "object" && typeof (v as any).year === "number") return (v as any).year;
+
+  const s = milestoneToText(v);
+  const m = s.match(/\b(19|20)\d{2}\b/);
   return m ? Number(m[0]) : null;
 }
 
@@ -84,16 +104,17 @@ export default function SnapshotsPage() {
     const mapB = new Map(b.summary.milestones.map((r) => [r.target, r]));
 
     const milestoneCompare = targets.map((t) => {
-      const aStr = mapA.get(t)?.base ?? "—";
-      const bStr = mapB.get(t)?.base ?? "—";
-      const ay = parseYear(aStr);
-      const by = parseYear(bStr);
+      const aRaw = mapA.get(t)?.base;
+      const bRaw = mapB.get(t)?.base;
+
+      const ay = milestoneToYear(aRaw);
+      const by = milestoneToYear(bRaw);
       const dy = ay != null && by != null ? by - ay : null;
 
       return {
         target: t,
-        a: aStr,
-        b: bStr,
+        a: milestoneToText(aRaw),
+        b: milestoneToText(bRaw),
         deltaYears: dy,
       };
     });
@@ -235,8 +256,7 @@ export default function SnapshotsPage() {
                   onClick={() => {
                     const next = renameSnapshot(s.id, draft);
                     setSnapshots(next);
-                    // keep draft in sync after save
-                    setEditing((p) => ({ ...p, [s.id]: draft.trim() || s.name }));
+                    setEditing((p) => ({ ...p, [s.id]: (draft ?? "").trim() || s.name }));
                   }}
                 >
                   Rename
@@ -244,18 +264,9 @@ export default function SnapshotsPage() {
               </div>
 
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <MiniKPI
-                  label="End NW (Bear)"
-                  value={formatCompactUsd(s.summary.end.usd.bear)}
-                />
-                <MiniKPI
-                  label="End NW (Base)"
-                  value={formatCompactUsd(s.summary.end.usd.base)}
-                />
-                <MiniKPI
-                  label="End NW (Bull)"
-                  value={formatCompactUsd(s.summary.end.usd.bull)}
-                />
+                <MiniKPI label="End NW (Bear)" value={formatCompactUsd(s.summary.end.usd.bear)} />
+                <MiniKPI label="End NW (Base)" value={formatCompactUsd(s.summary.end.usd.base)} />
+                <MiniKPI label="End NW (Bull)" value={formatCompactUsd(s.summary.end.usd.bull)} />
               </div>
 
               <div className="mt-4">
