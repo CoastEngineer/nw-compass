@@ -40,6 +40,20 @@ export function computeAlerts(args: {
     });
   }
 
+  // Alert X: Cashflow deficit at Year 1
+  {
+    const diff = cfg.netIncomeY1 - cfg.expenseY1;
+    let status: AlertStatus = "ok";
+    if (diff < 0) status = "caution";
+    alerts.push({
+      id: "cashflow-deficit",
+      title: "Cashflow deficit",
+      status,
+      message: "Chi phí đang vượt thu nhập (net) ngay từ năm đầu → kế hoạch phụ thuộc hoàn toàn vào CAGR.",
+      hint: "Giảm expenseY1 hoặc tăng netIncomeY1 để tạo saving dương.",
+    });
+  }
+
   // Alert 2: No fuel (saving=0 consecutive)
   {
     let maxStreak = 0;

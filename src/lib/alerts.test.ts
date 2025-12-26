@@ -97,6 +97,13 @@ describe("folly alerts", () => {
     expect(aC?.status).toBe("caution");
   });
 
+  it("D8 cashflow deficit caution when expense > income", () => {
+    const cfg = baseCfg({ netIncomeY1: 1000, expenseY1: 2000, incomeGrowth: 0, expenseGrowth: 0 });
+    const rows = buildProjection(cfg);
+    const a = computeAlerts({ cfg, rows }).find(x => x.id === "cashflow-deficit");
+    expect(a?.status).toBe("caution");
+  });
+
   it("D6 milestone slippage watch/caution", () => {
     const cfg = baseCfg();
     const rows = buildProjection(cfg);
