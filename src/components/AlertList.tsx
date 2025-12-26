@@ -20,7 +20,7 @@ export default function AlertList(props: { alerts: Alert[] }) {
 
   const { visible, hiddenCount, worst } = useMemo(() => {
     const sorted = props.alerts; // already sorted in computeAlerts
-    const max = showAll ? sorted.length : 5;
+    const max = showAll ? sorted.length : 0;
     return {
       visible: sorted.slice(0, max),
       hiddenCount: Math.max(0, sorted.length - max),

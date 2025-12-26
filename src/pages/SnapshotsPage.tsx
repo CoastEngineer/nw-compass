@@ -22,6 +22,8 @@ function MiniKPI({ label, value }: { label: string; value: string }) {
   );
 }
 
+const shortName = (s: string, n = 22) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
+
 /** Milestone values can be string ("2030 (age 39)") OR object ({year, age}) */
 function milestoneToText(v: any): string {
   if (v == null) return "—";
@@ -122,6 +124,9 @@ export default function SnapshotsPage() {
     return { a, b, aBase, bBase, delta, milestoneCompare };
   }, [selectedSnaps]);
 
+  const compareNameA = compare ? shortName(compare.a.name || "Snapshot") : "";
+  const compareNameB = compare ? shortName(compare.b.name || "Snapshot") : "";
+
   return (
     <Page
       title="Snapshots"
@@ -145,19 +150,19 @@ export default function SnapshotsPage() {
         <div className="mt-6">
           <Card
             title="Compare"
-            subtitle={`A: ${compare.a.name}  •  B: ${compare.b.name}`}
+            subtitle={`${compareNameA}  •  ${compareNameB}`}
           >
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <MiniKPI
-                label="End NW (Base) — A"
+                label={`End NW (Base) — ${compareNameA}`}
                 value={formatCompactUsd(compare.aBase)}
               />
               <MiniKPI
-                label="End NW (Base) — B"
+                label={`End NW (Base) — ${compareNameB}`}
                 value={formatCompactUsd(compare.bBase)}
               />
               <MiniKPI
-                label="Delta (B - A)"
+                label={`Delta (${compareNameB} - ${compareNameA})`}
                 value={formatCompactUsd(compare.delta)}
               />
             </div>
@@ -169,8 +174,8 @@ export default function SnapshotsPage() {
                   <thead className="text-xs text-neutral-500">
                     <tr className="border-b border-neutral-100">
                       <th className="py-2 text-left font-medium">Target</th>
-                      <th className="py-2 text-left font-medium">A</th>
-                      <th className="py-2 text-left font-medium">B</th>
+                      <th className="py-2 text-left font-medium">{compareNameA}</th>
+                      <th className="py-2 text-left font-medium">{compareNameB}</th>
                       <th className="py-2 text-left font-medium">Δ (yrs)</th>
                     </tr>
                   </thead>
@@ -197,11 +202,11 @@ export default function SnapshotsPage() {
 
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <MiniKPI
-                  label="Alerts — A (caution/watch/ok)"
+                  label={`Alerts — ${compareNameA} (caution/watch/ok)`}
                   value={`${compare.a.summary.alerts.counts.caution}/${compare.a.summary.alerts.counts.watch}/${compare.a.summary.alerts.counts.ok}`}
                 />
                 <MiniKPI
-                  label="Alerts — B (caution/watch/ok)"
+                  label={`Alerts — ${compareNameB} (caution/watch/ok)`}
                   value={`${compare.b.summary.alerts.counts.caution}/${compare.b.summary.alerts.counts.watch}/${compare.b.summary.alerts.counts.ok}`}
                 />
               </div>

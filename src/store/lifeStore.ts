@@ -3,12 +3,14 @@ import { persist } from "zustand/middleware";
 import type { LifeConfig } from "../lib/model";
 import { defaultConfig } from "../lib/defaultConfig";
 import { lifeConfigSchema } from "../lib/configSchema";
+export type YScale = "linear" | "log";
 
 type DisplayPrefs = {
   currency: "USD" | "VND";
   tableStep: 1 | 5 | 10;
   compactNumbers: boolean;
   kidMode: boolean;
+  yScale: "linear" | "log";
 };
 
 type LifeState = {
@@ -29,6 +31,7 @@ const defaultDisplay: DisplayPrefs = {
   tableStep: 5,
   compactNumbers: true,
   kidMode: false,
+  yScale: "linear",
 };
 
 export const useLifeStore = create<LifeState>()(
