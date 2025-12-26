@@ -11,6 +11,7 @@ import ProjectionTable from "../components/ProjectionTable";
 import AlertList from "../components/AlertList";
 import { computeAlerts } from "../lib/alerts";
 import NWChart from "../components/NWChart";
+import { addSnapshot, createSnapshot } from "../lib/snapshots";
 
 export default function DashboardPage() {
   const cfg = useLifeStore((s) => s.config);
@@ -49,6 +50,14 @@ export default function DashboardPage() {
   const endBaseUsd = last?.nwUsd.base ?? 0;
   const endBullUsd = last?.nwUsd.bull ?? 0;
 
+  const onSaveSnapshot = () => {
+    const name = window.prompt("Snapshot name (optional):", "");
+    const snap = createSnapshot(cfg, name ?? undefined);
+    addSnapshot(snap);
+    // quick feedback (can replace with toast later)
+    alert("Snapshot saved.");
+  };
+
   return (
     <Page title="Dashboard" subtitle="A calm, precise cockpit for your family plan">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -72,7 +81,6 @@ export default function DashboardPage() {
             ]}
           />
 
-          {/* ✅ NEW: Linear/Log Y-scale */}
           <SegmentedToggle
             value={yScale}
             onChange={(v) => setDisplay({ yScale: v as any })}
@@ -83,14 +91,27 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="text-xs text-neutral-500">
-          {first?.year} → {last?.year} (age {startAge} → {endAge})
+        <div className="flex items-center gap-3">
+          <div className="text-xs text-neutral-500">
+            {first?.year} → {last?.year} (age {startAge} → {endAge})
+          </div>
+
+          <button
+            className="px-4 py-2 rounded-2xl bg-neutral-900 text-white text-sm hover:opacity-95 transition"
+            onClick={onSaveSnapshot}
+          >
+            Save snapshot
+          </button>
         </div>
       </div>
 
       {/* KPI strip */}
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPIStatCard label="Current age (start)" value={`${startAge}`} sub={`Start year ${cfg.startYear}`} />
+        <KPIStatCard
+          label="Current age (start)"
+          value={`${startAge}`}
+          sub={`Start year ${cfg.startYear}`}
+        />
 
         <KPIStatCard
           label="Start NW"
@@ -150,12 +171,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-6">
-        <NWChart
-          rows={rows}
-          currency={display.currency}
-          tableStep={display.tableStep}
-          yScale={yScale}
-        />
+        <NWChart rows={rows} currency={display.currency} tableStep={display.tableStep} yScale={yScale} />
       </div>
 
       <div className="mt-6">
