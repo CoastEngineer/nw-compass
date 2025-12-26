@@ -8,6 +8,8 @@ import { buildMilestoneGrid } from "../lib/milestoneHelpers";
 import { useLifeStore } from "../store/lifeStore";
 import { formatCompactUsd, formatCompactVnd } from "../lib/format";
 import ProjectionTable from "../components/ProjectionTable";
+import AlertList from "../components/AlertList";
+import { computeAlerts } from "../lib/alerts";
 
 export default function DashboardPage() {
     const cfg = useLifeStore((s) => s.config);
@@ -15,6 +17,7 @@ export default function DashboardPage() {
     const setDisplay = useLifeStore((s) => s.setDisplay);
 
     const rows = useMemo(() => buildProjection(cfg), [cfg]);
+    const alerts = useMemo(() => computeAlerts({ cfg, rows }), [cfg, rows]);
     const last = rows.at(-1);
     const first = rows[0];
 
@@ -102,6 +105,10 @@ export default function DashboardPage() {
                 <KPIStatCard label="Milestones hit" value={`${hits.length}`} sub="Across 3 scenarios" />
             </div>
 
+            <div className="mt-6">
+                <AlertList alerts={alerts} />
+            </div>
+            
             <div className="mt-6">
                 <MilestoneTable rows={milestoneGrid} />
             </div>
