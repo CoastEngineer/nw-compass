@@ -8,6 +8,8 @@ import { useLifeStore } from "../store/lifeStore";
 import { formatInt, formatPercent01, parseLooseNumber } from "../lib/input";
 import type { SalaryFastV1 } from "../lib/salaryFast";
 import { toastAutoSaved } from "../components/toastBus";
+import type { ValidationResult } from "../lib/validation";
+import { validateCurrency, validateCAGR } from "../lib/validation";
 
 function Field({
   label,
@@ -18,6 +20,7 @@ function Field({
   suffix,
   inputMode = "numeric",
   pulseToken,
+  error,
 }: {
   label: string;
   hint?: string;
@@ -27,6 +30,7 @@ function Field({
   suffix?: string;
   inputMode?: HTMLAttributes<HTMLInputElement>["inputMode"];
   pulseToken?: number;
+  error?: string;
 }) {
   const [justSaved, setJustSaved] = useState(false);
 
@@ -36,6 +40,8 @@ function Field({
     const t = window.setTimeout(() => setJustSaved(false), 900);
     return () => window.clearTimeout(t);
   }, [pulseToken]);
+
+  const hasError = !!error;
 
   return (
     <label className="grid gap-1">
@@ -51,7 +57,9 @@ function Field({
         <input
           className={[
             "h-10 w-full rounded-xl border px-3 pr-10 transition",
-            justSaved
+            hasError
+              ? "border-red-300 ring-2 ring-red-100"
+              : justSaved
               ? "border-emerald-300 ring-2 ring-emerald-100"
               : "border-neutral-200 focus:border-neutral-300 focus:ring-2 focus:ring-neutral-100",
           ].join(" ")}
@@ -66,6 +74,12 @@ function Field({
           </div>
         )}
       </div>
+      
+      {hasError && (
+        <div className="text-xs text-red-600 mt-0.5">
+          {error}
+        </div>
+      )}
     </label>
   );
 }
@@ -105,6 +119,18 @@ export default function ConfigPage() {
   const [savedPulse, setSavedPulse] = useState<Record<string, number>>({});
   const markSaved = (key: string) => setSavedPulse((p) => ({ ...p, [key]: (p[key] ?? 0) + 1 }));
 
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const setValidationError = (key: string, error: string | undefined) => {
+    setValidationErrors((prev) => {
+      if (!error) {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      }
+      return { ...prev, [key]: error };
+    });
+  };
+
   const incomeMode = (cfg as any).incomeMode ?? "simple";
   const salaryFast: SalaryFastV1 | undefined = (cfg as any).salaryFast;
   const showSalary = incomeMode === "salary_fast";
@@ -119,13 +145,29 @@ export default function ConfigPage() {
   const setDraftKey = (k: string, v: string) => setDraft((p) => ({ ...p, [k]: v }));
 
   // ✅ IMPORTANT FIX: only commit if user edited this field (key exists in draft)
-  const commitMoney = (key: string, currentValue: number, apply: (n: number) => void) => {
+  const commitMoney = (
+    key: string,
+    currentValue: number,
+    apply: (n: number) => void,
+    validate?: (n: number) => ValidationResult
+  ) => {
     if (!hasDraftKey(key)) return; // user just tabbed through
 
     const raw = (draft[key] ?? "").trim();
 
     // if user cleared the field intentionally -> set 0
     const n = raw === "" ? 0 : parseLooseNumber(raw);
+
+    // Validate the value if validation function is provided
+    if (validate) {
+      const result = validate(n);
+      if (!result.valid) {
+        setValidationError(key, result.error);
+        return; // Don't save invalid values
+      } else {
+        setValidationError(key, undefined); // Clear error
+      }
+    }
 
     // optionally avoid redundant patch
     if (Number.isFinite(n) && n !== currentValue) apply(n);
@@ -135,12 +177,28 @@ export default function ConfigPage() {
     toastAutoSaved();
   };
 
-  const commitPercent = (key: string, currentV01: number, apply: (v01: number) => void) => {
+  const commitPercent = (
+    key: string,
+    currentV01: number,
+    apply: (v01: number) => void,
+    validate?: (v01: number) => ValidationResult
+  ) => {
     if (!hasDraftKey(key)) return;
 
     const raw = (draft[key] ?? "").trim();
     const pct = raw === "" ? 0 : parseLooseNumber(raw);
     const v01 = pct / 100;
+
+    // Validate the value if validation function is provided
+    if (validate) {
+      const result = validate(v01);
+      if (!result.valid) {
+        setValidationError(key, result.error);
+        return; // Don't save invalid values
+      } else {
+        setValidationError(key, undefined); // Clear error
+      }
+    }
 
     if (Number.isFinite(v01) && v01 !== currentV01) apply(v01);
 
@@ -194,10 +252,12 @@ export default function ConfigPage() {
                   onChange={(v) => setDraftKey("netIncomeY1", v)}
                   onBlur={() =>
                     commitMoney("netIncomeY1", cfg.netIncomeY1, (n) =>
-                      patchConfig({ netIncomeY1: n } as any)
+                      patchConfig({ netIncomeY1: n } as any),
+                      validateCurrency
                     )
                   }
                   pulseToken={savedPulse.netIncomeY1}
+                  error={validationErrors.netIncomeY1}
                 />
 
                 <Field
@@ -206,10 +266,12 @@ export default function ConfigPage() {
                   onChange={(v) => setDraftKey("expenseY1", v)}
                   onBlur={() =>
                     commitMoney("expenseY1", cfg.expenseY1, (n) =>
-                      patchConfig({ expenseY1: n } as any)
+                      patchConfig({ expenseY1: n } as any),
+                      validateCurrency
                     )
                   }
                   pulseToken={savedPulse.expenseY1}
+                  error={validationErrors.expenseY1}
                 />
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -221,10 +283,12 @@ export default function ConfigPage() {
                     onChange={(v) => setDraftKey("cagrBear", v)}
                     onBlur={() =>
                       commitPercent("cagrBear", cfg.cagr.bear, (v01) =>
-                        patchConfig({ cagr: { ...cfg.cagr, bear: v01 } } as any)
+                        patchConfig({ cagr: { ...cfg.cagr, bear: v01 } } as any),
+                        validateCAGR
                       )
                     }
                     pulseToken={savedPulse.cagrBear}
+                    error={validationErrors.cagrBear}
                   />
                   <Field
                     label="CAGR — Base"
@@ -234,10 +298,12 @@ export default function ConfigPage() {
                     onChange={(v) => setDraftKey("cagrBase", v)}
                     onBlur={() =>
                       commitPercent("cagrBase", cfg.cagr.base, (v01) =>
-                        patchConfig({ cagr: { ...cfg.cagr, base: v01 } } as any)
+                        patchConfig({ cagr: { ...cfg.cagr, base: v01 } } as any),
+                        validateCAGR
                       )
                     }
                     pulseToken={savedPulse.cagrBase}
+                    error={validationErrors.cagrBase}
                   />
                   <Field
                     label="CAGR — Bull"
@@ -247,10 +313,12 @@ export default function ConfigPage() {
                     onChange={(v) => setDraftKey("cagrBull", v)}
                     onBlur={() =>
                       commitPercent("cagrBull", cfg.cagr.bull, (v01) =>
-                        patchConfig({ cagr: { ...cfg.cagr, bull: v01 } } as any)
+                        patchConfig({ cagr: { ...cfg.cagr, bull: v01 } } as any),
+                        validateCAGR
                       )
                     }
                     pulseToken={savedPulse.cagrBull}
+                    error={validationErrors.cagrBull}
                   />
                 </div>
               </div>
