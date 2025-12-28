@@ -13,6 +13,14 @@ import {
   type Snapshot,
 } from "../lib/snapshots";
 
+// Type alias for MilestoneTable rows
+type MilestoneTableRow = {
+  label: string;
+  bear: { year: number; age: number } | null;
+  base: { year: number; age: number } | null;
+  bull: { year: number; age: number } | null;
+};
+
 function MiniKPI({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-neutral-100 bg-neutral-50/40 px-4 py-3">
@@ -279,7 +287,7 @@ export default function SnapshotsPage() {
               </div>
 
               <div className="mt-4">
-                <MilestoneTable rows={s.summary.milestones as unknown as Array<{ label: string; bear: { year: number; age: number } | null; base: { year: number; age: number } | null; bull: { year: number; age: number } | null }>} />
+                <MilestoneTable rows={s.summary.milestones as unknown as MilestoneTableRow[]} />
               </div>
             </Card>
           );
