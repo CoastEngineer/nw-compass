@@ -69,7 +69,7 @@ export function validateCurrency(value: number): ValidationResult {
  * Validate growth rates (income growth, expense growth)
  * Rules:
  * - Must be a finite number
- * - Must be > -1 (cannot be -100% or worse)
+ * - Must be > -1 (i.e., > -100%, matching Zod schema .gt(-1))
  */
 export function validateGrowthRate(value: number): ValidationResult {
   if (!Number.isFinite(value)) {
@@ -85,7 +85,7 @@ export function validateGrowthRate(value: number): ValidationResult {
  * Validate CAGR (Compound Annual Growth Rate)
  * Rules:
  * - Must be a finite number
- * - Must be > -1 (cannot be -100% or worse)
+ * - Must be > -1 (i.e., > -100%, matching Zod schema .gt(-1))
  * - Reasonable range: -50% to +100% (-0.5 to 1.0)
  */
 export function validateCAGR(value: number): ValidationResult {
