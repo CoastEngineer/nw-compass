@@ -5,13 +5,19 @@ import { deriveSalaryFastY1, type SalaryFastV1 } from "../lib/salaryFast";
 import { formatInt } from "../lib/input";
 import { toastApplied } from "./toastBus";
 
+// Extended config type with optional salary fields
+type ExtendedConfig = {
+  salaryFast?: SalaryFastV1;
+  netIncomeY1?: number;
+};
+
 export default function SalaryTaxFastDerivedCard() {
   const [open, setOpen] = useState(false);
 
   const cfg = useLifeStore((s) => s.config);
   const patchConfig = useLifeStore((s) => s.patchConfig);
 
-  const sf = (cfg as any).salaryFast as SalaryFastV1 | undefined;
+  const sf = (cfg as ExtendedConfig).salaryFast;
   const year = cfg.startYear ?? 2026;
 
   const d = useMemo(() => deriveSalaryFastY1(year, sf), [year, sf]);
@@ -32,7 +38,7 @@ export default function SalaryTaxFastDerivedCard() {
             className="text-xs px-3 py-2 rounded-xl bg-neutral-900 text-white hover:opacity-95 transition"
             onClick={() => {
               if (!d) return;
-              patchConfig({ netIncomeY1: Math.max(0, Math.round(d.netIncomeY1)) } as any);
+              patchConfig({ netIncomeY1: Math.max(0, Math.round(d.netIncomeY1)) } as ExtendedConfig);
               toastApplied();
             }}
           >

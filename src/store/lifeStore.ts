@@ -36,7 +36,7 @@ const defaultDisplay: DisplayPrefs = {
 };
 
 // ✅ helper: normalize config from any source (persist/import)
-function normalizeConfig(input: any): LifeConfig {
+function normalizeConfig(input: unknown): LifeConfig {
   // validate (throws if invalid)
   const validated = lifeConfigSchema.parse(input);
 
@@ -44,15 +44,15 @@ function normalizeConfig(input: any): LifeConfig {
   const cfg: LifeConfig = {
     ...defaultConfig,
     ...validated,
-    contributeYears: (validated as any).contributeYears ?? null,
+    contributeYears: (validated as { contributeYears?: number | null }).contributeYears ?? null,
   };
 
   return cfg;
 }
 
 // ✅ helper: normalize display from persist
-function normalizeDisplay(input: any): DisplayPrefs {
-  const d = input ?? {};
+function normalizeDisplay(input: unknown): DisplayPrefs {
+  const d = (input as Partial<DisplayPrefs>) ?? {};
   const merged: DisplayPrefs = {
     ...defaultDisplay,
     ...d,
@@ -85,8 +85,9 @@ export const useLifeStore = create<LifeState>()(
           const cfg = normalizeConfig(parsed);
           set({ config: cfg });
           return { ok: true };
-        } catch (e: any) {
-          return { ok: false, error: e?.message ?? "Invalid config JSON" };
+        } catch (e) {
+          const error = e as Error;
+          return { ok: false, error: error?.message ?? "Invalid config JSON" };
         }
       },
     }),
@@ -95,10 +96,11 @@ export const useLifeStore = create<LifeState>()(
       partialize: (s) => ({ config: s.config, display: s.display }),
 
       // ✅ MIGRATION: keep old localStorage compatible
-      migrate: (persisted: any) => {
+      migrate: (persisted: unknown) => {
         try {
-          const rawCfg = persisted?.config ?? defaultConfig;
-          const rawDisplay = persisted?.display ?? defaultDisplay;
+          const persistedObj = persisted as { config?: unknown; display?: unknown };
+          const rawCfg = persistedObj?.config ?? defaultConfig;
+          const rawDisplay = persistedObj?.display ?? defaultDisplay;
 
           const cfg = normalizeConfig(rawCfg);
           const display = normalizeDisplay(rawDisplay);

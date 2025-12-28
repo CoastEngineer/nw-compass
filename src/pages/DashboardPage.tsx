@@ -13,13 +13,20 @@ import { computeAlerts } from "../lib/alerts";
 import NWChart from "../components/NWChart";
 import { addSnapshot, createSnapshot } from "../lib/snapshots";
 
+// Extended display type with optional yScale
+type ExtendedDisplay = {
+  currency: "USD" | "VND";
+  tableStep: 1 | 5 | 10;
+  yScale?: "linear" | "log";
+};
+
 export default function DashboardPage() {
   const cfg = useLifeStore((s) => s.config);
   const display = useLifeStore((s) => s.display);
   const setDisplay = useLifeStore((s) => s.setDisplay);
 
   // ✅ fallback for older persisted display objects
-  const yScale: "linear" | "log" = (display as any).yScale ?? "linear";
+  const yScale: "linear" | "log" = (display as ExtendedDisplay).yScale ?? "linear";
 
   const rows = useMemo(() => buildProjection(cfg), [cfg]);
   const alerts = useMemo(() => computeAlerts({ cfg, rows }), [cfg, rows]);
@@ -64,7 +71,7 @@ export default function DashboardPage() {
         <div className="flex flex-wrap gap-2">
           <SegmentedToggle
             value={display.currency}
-            onChange={(v) => setDisplay({ currency: v as any })}
+            onChange={(v) => setDisplay({ currency: v as "USD" | "VND" })}
             options={[
               { label: "USD", value: "USD" },
               { label: "VND", value: "VND" },
@@ -73,7 +80,7 @@ export default function DashboardPage() {
 
           <SegmentedToggle
             value={String(display.tableStep)}
-            onChange={(v) => setDisplay({ tableStep: Number(v) as any })}
+            onChange={(v) => setDisplay({ tableStep: Number(v) as 1 | 5 | 10 })}
             options={[
               { label: "1y", value: "1" },
               { label: "5y", value: "5" },
@@ -83,7 +90,7 @@ export default function DashboardPage() {
 
           <SegmentedToggle
             value={yScale}
-            onChange={(v) => setDisplay({ yScale: v as any })}
+            onChange={(v) => setDisplay({ yScale: v as "linear" | "log" })}
             options={[
               { label: "Linear", value: "linear" },
               { label: "Log", value: "log" },

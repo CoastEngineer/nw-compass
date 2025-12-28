@@ -21,12 +21,6 @@ export default function ProjectionTable(props: {
       : formatCompactVnd(r.nwVnd[scenario]);
   };
 
-  const fmtMoney = (vnd: number) =>
-    props.currency === "USD" ? formatCompactUsd(vnd / (props.rows[0]?.nwVnd.base ? (props.rows[0].nwVnd.base / props.rows[0].nwUsd.base) : props.fxVndPerUsd)) : formatCompactVnd(vnd);
-
-  // ^ trick này hơi hack; tốt nhất truyền fx vào. Nếu muốn sạch: truyền fxVndPerUsd từ cfg.
-  // Em sẽ đưa bản sạch bên dưới để anh dùng luôn.
-
   return (
     <Card title="Projection table" subtitle={`Step = ${step} year(s). End-of-year values.`}>
       <div className="overflow-x-auto">

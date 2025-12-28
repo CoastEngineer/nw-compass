@@ -9,6 +9,12 @@ import { formatInt, formatPercent01, parseLooseNumber } from "../lib/input";
 import type { SalaryFastV1 } from "../lib/salaryFast";
 import { toastAutoSaved } from "../components/toastBus";
 
+// Extended config type with optional salary fields
+type ExtendedConfig = {
+  incomeMode?: string;
+  salaryFast?: SalaryFastV1;
+};
+
 function Field({
   label,
   hint,
@@ -32,9 +38,13 @@ function Field({
 
   useEffect(() => {
     if (!pulseToken) return;
-    setJustSaved(true);
-    const t = window.setTimeout(() => setJustSaved(false), 900);
-    return () => window.clearTimeout(t);
+    // Delay setState to avoid synchronous state update
+    const immediate = window.setTimeout(() => setJustSaved(true), 0);
+    const delayed = window.setTimeout(() => setJustSaved(false), 900);
+    return () => {
+      window.clearTimeout(immediate);
+      window.clearTimeout(delayed);
+    };
   }, [pulseToken]);
 
   return (
@@ -105,14 +115,14 @@ export default function ConfigPage() {
   const [savedPulse, setSavedPulse] = useState<Record<string, number>>({});
   const markSaved = (key: string) => setSavedPulse((p) => ({ ...p, [key]: (p[key] ?? 0) + 1 }));
 
-  const incomeMode = (cfg as any).incomeMode ?? "simple";
-  const salaryFast: SalaryFastV1 | undefined = (cfg as any).salaryFast;
+  const incomeMode = (cfg as ExtendedConfig).incomeMode ?? "simple";
+  const salaryFast: SalaryFastV1 | undefined = (cfg as ExtendedConfig).salaryFast;
   const showSalary = incomeMode === "salary_fast";
 
   useEffect(() => {
     if (!showSalary) return;
     if (!looksEmptySalaryFast(salaryFast)) return;
-    patchConfig({ salaryFast: defaultSalaryFast(cfg.startYear ?? 2026) } as any);
+    patchConfig({ salaryFast: defaultSalaryFast(cfg.startYear ?? 2026) } as ExtendedConfig);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSalary, cfg.startYear]);
 
@@ -169,9 +179,9 @@ export default function ConfigPage() {
                         ? defaultSalaryFast(cfg.startYear ?? 2026)
                         : salaryFast;
 
-                      patchConfig({ incomeMode: "salary_fast", salaryFast: nextSF } as any);
+                      patchConfig({ incomeMode: "salary_fast", salaryFast: nextSF } as ExtendedConfig);
                     } else {
-                      patchConfig({ incomeMode: v as any } as any);
+                      patchConfig({ incomeMode: v } as ExtendedConfig);
                     }
                   }}
                   options={[
@@ -194,7 +204,7 @@ export default function ConfigPage() {
                   onChange={(v) => setDraftKey("netIncomeY1", v)}
                   onBlur={() =>
                     commitMoney("netIncomeY1", cfg.netIncomeY1, (n) =>
-                      patchConfig({ netIncomeY1: n } as any)
+                      patchConfig({ netIncomeY1: n })
                     )
                   }
                   pulseToken={savedPulse.netIncomeY1}
@@ -206,7 +216,7 @@ export default function ConfigPage() {
                   onChange={(v) => setDraftKey("expenseY1", v)}
                   onBlur={() =>
                     commitMoney("expenseY1", cfg.expenseY1, (n) =>
-                      patchConfig({ expenseY1: n } as any)
+                      patchConfig({ expenseY1: n })
                     )
                   }
                   pulseToken={savedPulse.expenseY1}
@@ -221,7 +231,7 @@ export default function ConfigPage() {
                     onChange={(v) => setDraftKey("cagrBear", v)}
                     onBlur={() =>
                       commitPercent("cagrBear", cfg.cagr.bear, (v01) =>
-                        patchConfig({ cagr: { ...cfg.cagr, bear: v01 } } as any)
+                        patchConfig({ cagr: { ...cfg.cagr, bear: v01 } })
                       )
                     }
                     pulseToken={savedPulse.cagrBear}
@@ -234,7 +244,7 @@ export default function ConfigPage() {
                     onChange={(v) => setDraftKey("cagrBase", v)}
                     onBlur={() =>
                       commitPercent("cagrBase", cfg.cagr.base, (v01) =>
-                        patchConfig({ cagr: { ...cfg.cagr, base: v01 } } as any)
+                        patchConfig({ cagr: { ...cfg.cagr, base: v01 } })
                       )
                     }
                     pulseToken={savedPulse.cagrBase}
@@ -247,7 +257,7 @@ export default function ConfigPage() {
                     onChange={(v) => setDraftKey("cagrBull", v)}
                     onBlur={() =>
                       commitPercent("cagrBull", cfg.cagr.bull, (v01) =>
-                        patchConfig({ cagr: { ...cfg.cagr, bull: v01 } } as any)
+                        patchConfig({ cagr: { ...cfg.cagr, bull: v01 } })
                       )
                     }
                     pulseToken={savedPulse.cagrBull}

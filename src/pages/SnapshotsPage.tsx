@@ -13,6 +13,14 @@ import {
   type Snapshot,
 } from "../lib/snapshots";
 
+// Type alias for MilestoneTable rows
+type MilestoneTableRow = {
+  label: string;
+  bear: { year: number; age: number } | null;
+  base: { year: number; age: number } | null;
+  bull: { year: number; age: number } | null;
+};
+
 function MiniKPI({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-neutral-100 bg-neutral-50/40 px-4 py-3">
@@ -25,13 +33,14 @@ function MiniKPI({ label, value }: { label: string; value: string }) {
 const shortName = (s: string, n = 22) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
 
 /** Milestone values can be string ("2030 (age 39)") OR object ({year, age}) */
-function milestoneToText(v: any): string {
+function milestoneToText(v: unknown): string {
   if (v == null) return "—";
   if (typeof v === "string") return v;
 
   if (typeof v === "object") {
-    const year = (v as any).year;
-    const age = (v as any).age;
+    const obj = v as { year?: unknown; age?: unknown };
+    const year = obj.year;
+    const age = obj.age;
     if (typeof year === "number" && typeof age === "number") return `${year} (age ${age})`;
     if (typeof year === "number") return String(year);
     return "—";
@@ -40,9 +49,12 @@ function milestoneToText(v: any): string {
   return String(v);
 }
 
-function milestoneToYear(v: any): number | null {
+function milestoneToYear(v: unknown): number | null {
   if (v == null) return null;
-  if (typeof v === "object" && typeof (v as any).year === "number") return (v as any).year;
+  if (typeof v === "object") {
+    const obj = v as { year?: unknown };
+    if (typeof obj.year === "number") return obj.year;
+  }
 
   const s = milestoneToText(v);
   const m = s.match(/\b(19|20)\d{2}\b/);
@@ -275,7 +287,7 @@ export default function SnapshotsPage() {
               </div>
 
               <div className="mt-4">
-                <MilestoneTable rows={s.summary.milestones as any} />
+                <MilestoneTable rows={s.summary.milestones as unknown as MilestoneTableRow[]} />
               </div>
             </Card>
           );
