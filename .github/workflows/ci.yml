@@ -10,6 +10,8 @@ jobs:
   quality-gates:
     name: Quality Gates
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         node-version: [20, 22]
