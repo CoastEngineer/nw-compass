@@ -1,4 +1,19 @@
 import type { LifeConfig, ProjectionRow } from "./model";
+import {
+  LIFESTYLE_INFLATION_WATCH,
+  LIFESTYLE_INFLATION_CAUTION,
+  NO_FUEL_WATCH_STREAK,
+  NO_FUEL_CAUTION_STREAK,
+  CONTRIB_CAP_WATCH_RATE,
+  CONTRIB_CAP_CAUTION_RATE,
+  HIGH_CAGR_WATCH,
+  HIGH_CAGR_CAUTION,
+  MILESTONE_SLIPPAGE_WATCH,
+  MILESTONE_SLIPPAGE_CAUTION,
+  BUFFER_THIN_WATCH,
+  BUFFER_THIN_CAUTION,
+  ALERT_ANALYSIS_WINDOW_YEARS,
+} from "./constants";
 
 export type AlertStatus = "ok" | "watch" | "caution";
 
@@ -29,8 +44,8 @@ export function computeAlerts(args: {
   {
     const diff = cfg.expenseGrowth - cfg.incomeGrowth;
     let status: AlertStatus = "ok";
-    if (diff >= 0.02) status = "caution";
-    else if (diff >= 0.005) status = "watch";
+    if (diff >= LIFESTYLE_INFLATION_CAUTION) status = "caution";
+    else if (diff >= LIFESTYLE_INFLATION_WATCH) status = "watch";
     alerts.push({
       id: "lifestyle-inflation",
       title: "Lifestyle inflation",
@@ -65,8 +80,8 @@ export function computeAlerts(args: {
       } else streak = 0;
     }
     let status: AlertStatus = "ok";
-    if (maxStreak >= 5) status = "caution";
-    else if (maxStreak >= 2) status = "watch";
+    if (maxStreak >= NO_FUEL_CAUTION_STREAK) status = "caution";
+    else if (maxStreak >= NO_FUEL_WATCH_STREAK) status = "watch";
     alerts.push({
       id: "no-fuel",
       title: "No compounding fuel",
@@ -77,7 +92,7 @@ export function computeAlerts(args: {
   }
 
   // Helpers for 10-year window
-  const firstN = rows.slice(0, Math.min(10, rows.length));
+  const firstN = rows.slice(0, Math.min(ALERT_ANALYSIS_WINDOW_YEARS, rows.length));
   const bindRate = (predicate: (r: ProjectionRow) => boolean) => {
     if (firstN.length === 0) return 0;
     const cnt = firstN.filter(predicate).length;
@@ -89,8 +104,8 @@ export function computeAlerts(args: {
     const max = Number.isFinite(cfg.maxContrib) ? cfg.maxContrib : Number.POSITIVE_INFINITY;
     const rate = bindRate((r) => max < Number.POSITIVE_INFINITY && r.saving > 0 && r.saving > max);
     let status: AlertStatus = "ok";
-    if (rate >= 0.6) status = "caution";
-    else if (rate >= 0.3) status = "watch";
+    if (rate >= CONTRIB_CAP_CAUTION_RATE) status = "caution";
+    else if (rate >= CONTRIB_CAP_WATCH_RATE) status = "watch";
     alerts.push({
       id: "clamped-by-max",
       title: "Contribution capped by max",
@@ -105,8 +120,8 @@ export function computeAlerts(args: {
     const cap = cfg.savingRateCap;
     const rate = bindRate((r) => cap != null && r.saving > 0 && r.income * cap < r.saving);
     let status: AlertStatus = "ok";
-    if (rate >= 0.6) status = "caution";
-    else if (rate >= 0.3) status = "watch";
+    if (rate >= CONTRIB_CAP_CAUTION_RATE) status = "caution";
+    else if (rate >= CONTRIB_CAP_WATCH_RATE) status = "watch";
     alerts.push({
       id: "capped-by-rate",
       title: "Contribution capped by saving rate",
@@ -119,8 +134,8 @@ export function computeAlerts(args: {
   // Alert 5: High CAGR caution
   {
     let status: AlertStatus = "ok";
-    if (cfg.cagr.base > 0.30) status = "caution";
-    else if (cfg.cagr.base > 0.25) status = "watch";
+    if (cfg.cagr.base > HIGH_CAGR_CAUTION) status = "caution";
+    else if (cfg.cagr.base > HIGH_CAGR_WATCH) status = "watch";
     alerts.push({
       id: "high-cagr",
       title: "Base CAGR very high",
@@ -140,8 +155,8 @@ export function computeAlerts(args: {
 
     if (last != null && cur != null) {
       const slip = cur - last;
-      if (slip >= 3) status = "caution";
-      else if (slip >= 1) status = "watch";
+      if (slip >= MILESTONE_SLIPPAGE_CAUTION) status = "caution";
+      else if (slip >= MILESTONE_SLIPPAGE_WATCH) status = "watch";
 
       if (slip > 0) {
         message = `Next milestone (Base) bị trễ ${slip} năm so với snapshot gần nhất.`;
@@ -166,8 +181,8 @@ export function computeAlerts(args: {
     const income0 = cfg.netIncomeY1;
     const ratio = income0 > 0 ? cfg.expenseY1 / income0 : 1;
     let status: AlertStatus = "ok";
-    if (ratio > 0.85) status = "caution";
-    else if (ratio > 0.70) status = "watch";
+    if (ratio > BUFFER_THIN_CAUTION) status = "caution";
+    else if (ratio > BUFFER_THIN_WATCH) status = "watch";
     alerts.push({
       id: "buffer-thin",
       title: "Safety buffer thin",

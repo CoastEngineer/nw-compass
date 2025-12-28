@@ -1,3 +1,5 @@
+import { MILESTONE_THRESHOLDS } from "./constants";
+
 export type Scenario = "bear" | "base" | "bull";
 
 export type LifeConfig = {
@@ -123,11 +125,10 @@ export function buildProjection(cfg: LifeConfig): ProjectionRow[] {
 }
 
 export function findMilestones(rows: ProjectionRow[]): MilestoneHit[] {
-  const thresholds = [1e6, 1e7, 1e8, 1e9];
   const out: MilestoneHit[] = [];
 
   for (const scenario of ["bear", "base", "bull"] as Scenario[]) {
-    for (const t of thresholds) {
+    for (const t of MILESTONE_THRESHOLDS) {
       const hit = rows.find((r) => r.nwUsd[scenario] >= t);
       if (hit) out.push({ thresholdUsd: t, scenario, year: hit.year, age: hit.age, nwUsd: hit.nwUsd[scenario] });
     }
