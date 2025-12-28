@@ -1,4 +1,4 @@
-import type { MilestoneHit, Scenario } from "./model";
+import type { MilestoneHit } from "./model";
 
 const thresholds = [
   { usd: 1e6, label: "$1M" },
@@ -21,7 +21,7 @@ export function buildMilestoneGrid(hits: MilestoneHit[]) {
   }));
 }
 
-export function nextMilestoneBase(hits: MilestoneHit[], currentYear: number) {
+export function nextMilestoneBase(hits: MilestoneHit[]) {
   const base = hits
     .filter((h) => h.scenario === "base")
     .sort((a, b) => a.thresholdUsd - b.thresholdUsd);

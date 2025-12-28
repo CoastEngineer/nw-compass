@@ -25,9 +25,9 @@ export default function ToastHost() {
       hideTimer.current = window.setTimeout(() => setOpen(false), duration);
     };
 
-    window.addEventListener(TOAST_EVENT, onToast as any);
+    window.addEventListener(TOAST_EVENT, onToast);
     return () => {
-      window.removeEventListener(TOAST_EVENT, onToast as any);
+      window.removeEventListener(TOAST_EVENT, onToast);
       if (hideTimer.current) window.clearTimeout(hideTimer.current);
     };
   }, []);

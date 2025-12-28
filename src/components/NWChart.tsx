@@ -9,8 +9,10 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   Legend,
+  type TooltipProps,
 } from "recharts";
 import { formatCompactUsd, formatCompactVnd } from "../lib/format";
+import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 type Currency = "USD" | "VND";
 type YScale = "linear" | "log";
@@ -40,12 +42,12 @@ function fmt(currency: Currency, v: number) {
 }
 
 // ✅ Custom legend: always Bear → Base → Bull
-function LegendContent({ payload }: any) {
+function LegendContent({ payload }: { payload?: Array<{ dataKey?: string; id?: string; value?: string | number; color?: string }> }) {
   if (!payload?.length) return null;
 
   // Map by dataKey
-  const byKey = new Map<string, any>();
-  payload.forEach((p: any) => {
+  const byKey = new Map<string, { dataKey?: string; id?: string; value?: string | number; color?: string }>();
+  payload.forEach((p) => {
     const k = p.dataKey ?? p.id ?? (typeof p.value === "string" ? p.value.toLowerCase() : "");
     if (k) byKey.set(k, p);
   });
@@ -80,14 +82,8 @@ function LegendContent({ payload }: any) {
 function CustomTooltip({
   active,
   payload,
-  label,
   currency,
-}: {
-  active?: boolean;
-  payload?: any[];
-  label?: any;
-  currency: Currency;
-}) {
+}: TooltipProps<ValueType, NameType> & { currency: Currency }) {
   if (!active || !payload?.length) return null;
   const row = payload[0]?.payload;
   if (!row) return null;
@@ -150,7 +146,7 @@ export default function NWChart(props: {
   const minPos = vals.length ? Math.min(...vals) : 1;
   const maxPos = vals.length ? Math.max(...vals) : 1;
 
-  const domain =
+  const domain: [number | ((min: number) => number), (max: number) => number] =
     props.yScale === "log"
       ? [minPos, (max: number) => Math.max(max, maxPos) * 1.08]
       : [0, (max: number) => Math.max(max, maxPos) * 1.08];
@@ -175,7 +171,7 @@ export default function NWChart(props: {
 
             <YAxis
               scale={props.yScale}
-              domain={domain as any}
+              domain={domain}
               allowDataOverflow
               tickFormatter={(v) => fmt(props.currency, Number(v))}
               tickLine={false}

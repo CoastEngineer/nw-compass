@@ -5,6 +5,11 @@ import type { SalaryFastV1 } from "../lib/salaryFast";
 import { formatInt, formatPercent01, parseLooseNumber } from "../lib/input";
 import { toastAutoSaved } from "./toastBus";
 
+// Extended config type with optional salary fields
+type ExtendedConfig = {
+  salaryFast?: SalaryFastV1;
+};
+
 function defaultSalaryFast(cfgYear: number): SalaryFastV1 {
   return {
     basicGrossMonthlyVnd: 234_520_000,
@@ -33,19 +38,19 @@ export default function SalaryTaxFastInputsCard() {
   const cfg = useLifeStore((s) => s.config);
   const patchConfig = useLifeStore((s) => s.patchConfig);
 
-  const sf = (cfg as any).salaryFast as SalaryFastV1 | undefined;
+  const sf = (cfg as ExtendedConfig).salaryFast;
 
   const [draft, setDraft] = useState<Record<string, string>>({});
   const hasDraftKey = (k: string) => Object.prototype.hasOwnProperty.call(draft, k);
 
   const patchSF = (patch: Partial<SalaryFastV1>) => {
     const base = sf ?? defaultSalaryFast(cfg.startYear ?? 2026);
-    patchConfig({ salaryFast: { ...base, ...patch } as any });
+    patchConfig({ salaryFast: { ...base, ...patch } } as ExtendedConfig);
   };
 
   useEffect(() => {
     if (!looksEmpty(sf)) return;
-    patchConfig({ salaryFast: defaultSalaryFast(cfg.startYear ?? 2026) } as any);
+    patchConfig({ salaryFast: defaultSalaryFast(cfg.startYear ?? 2026) } as ExtendedConfig);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cfg.startYear]);
 
