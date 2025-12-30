@@ -53,6 +53,44 @@ describe("ConfigPage", () => {
     expect(screen.getByText("CAGR — Bull")).toBeInTheDocument();
   });
 
+  it("displays FX rate field", () => {
+    renderWithRouter(<ConfigPage />);
+    // FX rate field should be visible
+    expect(screen.getByText("FX rate (VND per USD)")).toBeInTheDocument();
+    
+    // Find FX rate input by its label
+    const fxLabel = screen.getByText("FX rate (VND per USD)");
+    const fxInput = fxLabel.closest("label")?.querySelector("input");
+    expect(fxInput).toBeInTheDocument();
+    
+    // Check that it has the default value
+    if (fxInput) {
+      expect(fxInput.value).toBe("27,000");
+    }
+  });
+
+  it("can edit FX rate field", () => {
+    renderWithRouter(<ConfigPage />);
+    
+    // Find FX rate input
+    const fxLabel = screen.getByText("FX rate (VND per USD)");
+    const fxInput = fxLabel.closest("label")?.querySelector("input");
+    expect(fxInput).toBeInTheDocument();
+    
+    if (fxInput) {
+      // Change the value
+      fireEvent.change(fxInput, { target: { value: "25000" } });
+      expect(fxInput.value).toBe("25000");
+      
+      // Blur to trigger save
+      fireEvent.blur(fxInput);
+      
+      // After blur, check store was updated
+      const config = useLifeStore.getState().config;
+      expect(config.fxVndPerUsd).toBe(25000);
+    }
+  });
+
   it("displays income mode toggle", () => {
     renderWithRouter(<ConfigPage />);
     // Income mode toggle should be present

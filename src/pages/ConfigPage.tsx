@@ -159,6 +159,25 @@ export default function ConfigPage() {
     toastAutoSaved();
   };
 
+  // commit helper for positive-only fields (like fxVndPerUsd)
+  const commitPositive = (key: string, currentValue: number, apply: (n: number) => void) => {
+    if (!hasDraftKey(key)) return;
+
+    const raw = (draft[key] ?? "").trim();
+    const n = raw === "" ? 0 : parseLooseNumber(raw);
+
+    // only commit if valid (finite and positive)
+    if (Number.isFinite(n) && n > 0 && n !== currentValue) {
+      apply(n);
+      setDraft((p) => ({ ...p, [key]: formatInt(n) }));
+      markSaved(key);
+      toastAutoSaved();
+    } else {
+      // revert to current value if invalid
+      setDraft((p) => ({ ...p, [key]: formatInt(currentValue) }));
+    }
+  };
+
   return (
     <Page title="Config" subtitle="Assumptions are the product. Keep them explicit.">
       <div className="mx-auto max-w-7xl">
@@ -220,6 +239,19 @@ export default function ConfigPage() {
                     )
                   }
                   pulseToken={savedPulse.expenseY1}
+                />
+
+                <Field
+                  label="FX rate (VND per USD)"
+                  hint="Used to convert VND ↔ USD in projections"
+                  value={draft.fxVndPerUsd ?? formatInt(cfg.fxVndPerUsd)}
+                  onChange={(v) => setDraftKey("fxVndPerUsd", v)}
+                  onBlur={() =>
+                    commitPositive("fxVndPerUsd", cfg.fxVndPerUsd, (n) =>
+                      patchConfig({ fxVndPerUsd: n })
+                    )
+                  }
+                  pulseToken={savedPulse.fxVndPerUsd}
                 />
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
