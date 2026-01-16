@@ -10,14 +10,13 @@ type ExtendedConfig = {
   salaryFast?: SalaryFastV1;
 };
 
-function defaultSalaryFast(cfgYear: number): SalaryFastV1 {
+function defaultSalaryFast(): SalaryFastV1 {
   return {
     basicGrossMonthlyVnd: 234_520_000,
     allowancesMonthlyVnd: 700_000,
     monthsPaidPerYear: 12,
     bonusDecMultiplier: 1.0,
-    bonusMarMultiplier: 1.8,
-    bonusMarChange: { effectiveYear: Math.max(cfgYear + 1, 2027), multiplier: 3.6 },
+    bonusMarMultiplier: 3.6,
     dependentsCount: 4,
     insuranceAnnualVnd: 65_256_000,
     personalDeductionMonthlyVnd: 15_500_000,
@@ -44,13 +43,13 @@ export default function SalaryTaxFastInputsCard() {
   const hasDraftKey = (k: string) => Object.prototype.hasOwnProperty.call(draft, k);
 
   const patchSF = (patch: Partial<SalaryFastV1>) => {
-    const base = sf ?? defaultSalaryFast(cfg.startYear ?? 2026);
+    const base = sf ?? defaultSalaryFast();
     patchConfig({ salaryFast: { ...base, ...patch } } as ExtendedConfig);
   };
 
   useEffect(() => {
     if (!looksEmpty(sf)) return;
-    patchConfig({ salaryFast: defaultSalaryFast(cfg.startYear ?? 2026) } as ExtendedConfig);
+    patchConfig({ salaryFast: defaultSalaryFast() } as ExtendedConfig);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cfg.startYear]);
 
@@ -93,9 +92,6 @@ export default function SalaryTaxFastInputsCard() {
     setDraft((p) => ({ ...p, [k]: formatPercent01(v01, 1) }));
     toastAutoSaved();
   };
-
-  const effectiveYear = sf?.bonusMarChange?.effectiveYear ?? 2027;
-  const effectiveMult = sf?.bonusMarChange?.multiplier ?? 3.6;
 
   return (
     <Card title="Salary & Tax (fast)" subtitle="Auto-saves on blur. Assumes 12 months/year (fixed).">
@@ -153,54 +149,13 @@ export default function SalaryTaxFastInputsCard() {
             <input
               className="h-10 rounded-xl border border-neutral-200 px-3"
               inputMode="decimal"
-              value={draft.bonusMarMultiplier ?? String(sf?.bonusMarMultiplier ?? 1.8)}
+              value={draft.bonusMarMultiplier ?? String(sf?.bonusMarMultiplier ?? 3.6)}
               onChange={(e) => setDraftKey("bonusMarMultiplier", e.target.value)}
               onBlur={() =>
-                commitFloat("bonusMarMultiplier", sf?.bonusMarMultiplier ?? 1.8, (n) =>
+                commitFloat("bonusMarMultiplier", sf?.bonusMarMultiplier ?? 3.6, (n) =>
                   patchSF({ bonusMarMultiplier: n })
                 )
               }
-            />
-          </label>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label className="grid gap-1">
-            <div className="text-sm text-neutral-600">March bonus change — from year</div>
-            <input
-              className="h-10 rounded-xl border border-neutral-200 px-3"
-              inputMode="numeric"
-              value={draft.marChangeYear ?? String(effectiveYear)}
-              onChange={(e) => setDraftKey("marChangeYear", e.target.value)}
-              onBlur={() => {
-                if (!hasDraftKey("marChangeYear")) return; // ✅ tab-through safe
-                const raw = (draft.marChangeYear ?? "").trim();
-                const y =
-                  raw === ""
-                    ? effectiveYear
-                    : Math.max(1900, Math.floor(parseLooseNumber(raw)));
-                patchSF({ bonusMarChange: { effectiveYear: y, multiplier: effectiveMult } });
-                setDraft((p) => ({ ...p, marChangeYear: String(y) }));
-                toastAutoSaved();
-              }}
-            />
-          </label>
-
-          <label className="grid gap-1">
-            <div className="text-sm text-neutral-600">March bonus change — multiplier</div>
-            <input
-              className="h-10 rounded-xl border border-neutral-200 px-3"
-              inputMode="decimal"
-              value={draft.marChangeMult ?? String(effectiveMult)}
-              onChange={(e) => setDraftKey("marChangeMult", e.target.value)}
-              onBlur={() => {
-                if (!hasDraftKey("marChangeMult")) return; // ✅ tab-through safe
-                const raw = (draft.marChangeMult ?? "").trim();
-                const m = raw === "" ? effectiveMult : parseLooseNumber(raw);
-                patchSF({ bonusMarChange: { effectiveYear, multiplier: m } });
-                setDraft((p) => ({ ...p, marChangeMult: String(m) }));
-                toastAutoSaved();
-              }}
             />
           </label>
         </div>

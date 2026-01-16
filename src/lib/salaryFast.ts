@@ -5,7 +5,7 @@ export type SalaryFastV1 = {
   monthsPaidPerYear?: number;
 
   bonusDecMultiplier?: number; // default 1.0
-  bonusMarMultiplier?: number; // default 1.8
+  bonusMarMultiplier?: number; // default 3.6 (updated from 1.8)
 
   bonusMarChange?: {
     effectiveYear: number; // e.g. 2027
@@ -58,7 +58,7 @@ function clamp(n: number, min: number, max: number) {
 }
 
 function marMultiplierForYear(p: SalaryFastV1, year: number) {
-  const cur = p.bonusMarMultiplier ?? 1.8;
+  const cur = p.bonusMarMultiplier ?? 3.6;
   const ch = p.bonusMarChange;
   if (ch && year >= ch.effectiveYear) return ch.multiplier;
   return cur;
