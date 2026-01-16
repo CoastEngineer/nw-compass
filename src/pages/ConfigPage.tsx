@@ -80,14 +80,13 @@ function Field({
   );
 }
 
-function defaultSalaryFast(cfgYear: number): SalaryFastV1 {
+function defaultSalaryFast(): SalaryFastV1 {
   return {
     basicGrossMonthlyVnd: 234_520_000,
     allowancesMonthlyVnd: 700_000,
     monthsPaidPerYear: 12,
     bonusDecMultiplier: 1.0,
-    bonusMarMultiplier: 1.8,
-    bonusMarChange: { effectiveYear: Math.max(cfgYear + 1, 2027), multiplier: 3.6 },
+    bonusMarMultiplier: 3.6,
     dependentsCount: 4,
     insuranceAnnualVnd: 65_256_000,
     personalDeductionMonthlyVnd: 15_500_000,
@@ -122,7 +121,7 @@ export default function ConfigPage() {
   useEffect(() => {
     if (!showSalary) return;
     if (!looksEmptySalaryFast(salaryFast)) return;
-    patchConfig({ salaryFast: defaultSalaryFast(cfg.startYear ?? 2026) } as ExtendedConfig);
+    patchConfig({ salaryFast: defaultSalaryFast() } as ExtendedConfig);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSalary, cfg.startYear]);
 
@@ -195,7 +194,7 @@ export default function ConfigPage() {
                   onChange={(v) => {
                     if (v === "salary_fast") {
                       const nextSF = looksEmptySalaryFast(salaryFast)
-                        ? defaultSalaryFast(cfg.startYear ?? 2026)
+                        ? defaultSalaryFast()
                         : salaryFast;
 
                       patchConfig({ incomeMode: "salary_fast", salaryFast: nextSF } as ExtendedConfig);
@@ -216,6 +215,19 @@ export default function ConfigPage() {
 
             <Card title="Core assumptions" subtitle="Auto-saves on blur. Projection engine reads these.">
               <div className="grid gap-4">
+                <Field
+                  label="Starting net worth (VND)"
+                  hint="Your initial wealth at start year"
+                  value={draft.startNWVnd ?? formatInt(cfg.startNWVnd)}
+                  onChange={(v) => setDraftKey("startNWVnd", v)}
+                  onBlur={() =>
+                    commitMoney("startNWVnd", cfg.startNWVnd, (n) =>
+                      patchConfig({ startNWVnd: n })
+                    )
+                  }
+                  pulseToken={savedPulse.startNWVnd}
+                />
+
                 <Field
                   label="Net income (VND/year)"
                   hint={showSalary ? "Core value (can be derived)" : "Core value"}
