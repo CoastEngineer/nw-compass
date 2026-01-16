@@ -145,4 +145,42 @@ describe("ConfigPage", () => {
     // Page should render without errors
     expect(screen.getByText("Core assumptions")).toBeInTheDocument();
   });
+
+  it("displays starting net worth field", () => {
+    renderWithRouter(<ConfigPage />);
+    // Starting net worth field should be visible
+    expect(screen.getByText("Starting net worth (VND)")).toBeInTheDocument();
+    
+    // Find starting net worth input by its label
+    const startNWLabel = screen.getByText("Starting net worth (VND)");
+    const startNWInput = startNWLabel.closest("label")?.querySelector("input");
+    expect(startNWInput).toBeInTheDocument();
+    
+    // Check that it has the default value
+    if (startNWInput) {
+      expect(startNWInput.value).toBe("8,490,000,000");
+    }
+  });
+
+  it("can edit starting net worth field", () => {
+    renderWithRouter(<ConfigPage />);
+    
+    // Find starting net worth input
+    const startNWLabel = screen.getByText("Starting net worth (VND)");
+    const startNWInput = startNWLabel.closest("label")?.querySelector("input");
+    expect(startNWInput).toBeInTheDocument();
+    
+    if (startNWInput) {
+      // Change the value
+      fireEvent.change(startNWInput, { target: { value: "10000000000" } });
+      expect(startNWInput.value).toBe("10000000000");
+      
+      // Blur to trigger save
+      fireEvent.blur(startNWInput);
+      
+      // After blur, check store was updated
+      const config = useLifeStore.getState().config;
+      expect(config.startNWVnd).toBe(10000000000);
+    }
+  });
 });
